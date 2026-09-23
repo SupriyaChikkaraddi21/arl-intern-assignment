@@ -6,18 +6,23 @@ import {
 
 export async function harvestRoutes(app: FastifyInstance) {
   // CREATE HARVEST
-  app.post("/harvests", async (request, reply) => {
+  app.post("/batches/:id/harvest", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const batchId = Number(id);
+
+    if (!Number.isInteger(batchId) || batchId <= 0) {
+      return reply.status(400).send({
+        message: "Invalid batch ID",
+      });
+    }
+
     const body = request.body as {
-      batch_id?: number;
       harvested_on?: string;
       weight_grams?: number;
       grade?: string;
     };
 
     if (
-      body.batch_id === undefined ||
-      typeof body.batch_id !== "number" ||
-      body.batch_id <= 0 ||
       !body.harvested_on ||
       body.weight_grams === undefined ||
       typeof body.weight_grams !== "number" ||
@@ -31,7 +36,7 @@ export async function harvestRoutes(app: FastifyInstance) {
 
     try {
       const harvest = await createHarvest(
-        body.batch_id,
+        batchId,
         body.harvested_on,
         body.weight_grams,
         body.grade

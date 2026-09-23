@@ -42,6 +42,7 @@ describe("API tests", () => {
     });
 
     expect(response.statusCode).toBe(404);
+
     expect(response.json()).toEqual({
       message: "Tray not found",
     });
@@ -58,6 +59,7 @@ describe("API tests", () => {
     });
 
     expect(response.statusCode).toBe(400);
+
     expect(response.json()).toEqual({
       message: "Invalid tray ID",
     });
@@ -79,6 +81,7 @@ describe("API tests", () => {
     });
 
     expect(response.statusCode).toBe(400);
+
     expect(response.json()).toEqual({
       message: "Invalid or missing tray fields",
     });
@@ -102,6 +105,7 @@ describe("API tests", () => {
     });
 
     expect(response.statusCode).toBe(404);
+
     expect(response.json()).toEqual({
       message: "Tray not found",
     });
@@ -125,6 +129,7 @@ describe("API tests", () => {
     });
 
     expect(response.statusCode).toBe(400);
+
     expect(response.json()).toEqual({
       message: "Invalid or missing batch fields",
     });
@@ -161,6 +166,7 @@ describe("API tests", () => {
     });
 
     expect(response.statusCode).toBe(400);
+
     expect(response.json()).toEqual({
       message: "Invalid pagination parameters",
     });
@@ -168,14 +174,13 @@ describe("API tests", () => {
     await app.close();
   });
 
-  test("POST /harvests rejects missing batch", async () => {
+  test("POST /batches/:id/harvest rejects missing batch", async () => {
     const app = await buildApp();
 
     const response = await app.inject({
       method: "POST",
-      url: "/harvests",
+      url: "/batches/999999/harvest",
       payload: {
-        batch_id: 999999,
         harvested_on: "2026-09-24",
         weight_grams: 500,
         grade: "A",
@@ -183,6 +188,7 @@ describe("API tests", () => {
     });
 
     expect(response.statusCode).toBe(404);
+
     expect(response.json()).toEqual({
       message: "Batch not found",
     });
@@ -190,14 +196,13 @@ describe("API tests", () => {
     await app.close();
   });
 
-  test("POST /harvests rejects invalid weight", async () => {
+  test("POST /batches/:id/harvest rejects invalid weight", async () => {
     const app = await buildApp();
 
     const response = await app.inject({
       method: "POST",
-      url: "/harvests",
+      url: "/batches/1/harvest",
       payload: {
-        batch_id: 1,
         harvested_on: "2026-09-24",
         weight_grams: 0,
         grade: "A",
@@ -205,6 +210,7 @@ describe("API tests", () => {
     });
 
     expect(response.statusCode).toBe(400);
+
     expect(response.json()).toEqual({
       message: "Invalid or missing harvest fields",
     });
