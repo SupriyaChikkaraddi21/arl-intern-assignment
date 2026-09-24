@@ -546,6 +546,59 @@ The following assumptions were made where the assignment specification did not e
 - No frontend, authentication, Docker, CI/CD, or deployment infrastructure is required because these are outside the evaluation scope of the assignment.
 - The implementation prioritizes correctness of the required REST API, database design, business rules, transactions, and automated tests.
 - Part 3 is treated separately from the required Part 1 and Part 2 functionality.
+
+## Part 3 — Yield Reporting (3c)
+
+### Chosen Option
+
+I chose **Part 3c: Yield Reporting** because it extends the existing harvest and batch data model into a useful reporting capability while demonstrating SQL aggregation, filtering, grouping, and date-based calculations.
+
+The implementation provides:
+
+`GET /reports/yield?from=YYYY-MM-DD&to=YYYY-MM-DD&group_by=crop`
+
+or:
+
+`GET /reports/yield?from=YYYY-MM-DD&to=YYYY-MM-DD&group_by=zone`
+
+### Approach
+
+The endpoint accepts:
+
+- `from` — start date of the harvest reporting period
+- `to` — end date of the harvest reporting period
+- `group_by` — either `crop` or `zone`
+
+For each group, the API returns:
+
+- Total harvested weight in grams
+- Number of harvested batches
+- Average number of days from `seeded_on` to `harvested_on`
+
+The reporting operation is performed using **one SQL query**. There is no loop that executes a separate database query for each group.
+
+### SQL Query
+
+The core query is:
+
+```sql
+SELECT
+  <group_column> AS "group",
+  SUM(h.weight_grams)::int AS total_harvested_weight_grams,
+  COUNT(DISTINCT b.id)::int AS batches_harvested,
+  ROUND(
+    AVG(h.harvested_on - b.seeded_on),
+    2
+  ) AS average_days_to_harvest
+FROM harvests h
+JOIN batches b
+  ON b.id = h.batch_id
+JOIN trays t
+  ON t.id = b.tray_id
+WHERE h.harvested_on BETWEEN $1 AND $2
+GROUP BY <group_column>
+ORDER BY <group_column>;
+
 ## Author
 
 Developed as part of the **AgResearch Labs Software Developer Intern Take-Home Assignment**.

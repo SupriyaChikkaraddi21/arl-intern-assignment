@@ -77,17 +77,35 @@ export const createHarvest = async (
     client.release();
   }
 };
-export const getYieldReport = async () => {
-  const result = await pool.query(`
+export const getYieldReport = async (
+  from: string,
+  to: string,
+  groupBy: "crop" | "zone"
+) => {
+  const groupColumn =
+    groupBy === "crop" ? "b.crop" : "t.zone";
+
+  const result = await pool.query(
+    `
     SELECT
-      b.crop,
-      h.grade,
-      SUM(h.weight_grams)::int AS total_weight_grams
+      ${groupColumn} AS "group",
+      SUM(h.weight_grams)::int AS total_harvested_weight_grams,
+      COUNT(DISTINCT b.id)::int AS batches_harvested,
+      ROUND(
+        AVG(h.harvested_on - b.seeded_on),
+        2
+      ) AS average_days_to_harvest
     FROM harvests h
-    JOIN batches b ON b.id = h.batch_id
-    GROUP BY b.crop, h.grade
-    ORDER BY b.crop, h.grade
-  `);
+    JOIN batches b
+      ON b.id = h.batch_id
+    JOIN trays t
+      ON t.id = b.tray_id
+    WHERE h.harvested_on BETWEEN $1 AND $2
+    GROUP BY ${groupColumn}
+    ORDER BY ${groupColumn}
+    `,
+    [from, to]
+  );
 
   return result.rows;
 };

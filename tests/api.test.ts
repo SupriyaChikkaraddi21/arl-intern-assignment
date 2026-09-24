@@ -282,12 +282,12 @@ describe("API tests", () => {
     await app.close();
   });
 
-  test("GET /reports/yield returns yield report", async () => {
+  test("GET /reports/yield returns grouped yield report", async () => {
     const app = await buildApp();
 
     const response = await app.inject({
       method: "GET",
-      url: "/reports/yield",
+      url: "/reports/yield?from=2026-01-01&to=2026-12-31&group_by=crop",
     });
 
     expect(response.statusCode).toBe(200);
@@ -297,10 +297,66 @@ describe("API tests", () => {
     expect(Array.isArray(body)).toBe(true);
 
     if (body.length > 0) {
-      expect(body[0]).toHaveProperty("crop");
-      expect(body[0]).toHaveProperty("grade");
-      expect(body[0]).toHaveProperty("total_weight_grams");
+      expect(body[0]).toHaveProperty("group");
+      expect(body[0]).toHaveProperty(
+        "total_harvested_weight_grams"
+      );
+      expect(body[0]).toHaveProperty("batches_harvested");
+      expect(body[0]).toHaveProperty(
+        "average_days_to_harvest"
+      );
     }
+
+    await app.close();
+  });
+
+  test("GET /reports/yield rejects missing parameters", async () => {
+    const app = await buildApp();
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/reports/yield",
+    });
+
+    expect(response.statusCode).toBe(400);
+
+    expect(response.json()).toEqual({
+      message: "from, to and group_by are required",
+    });
+
+    await app.close();
+  });
+
+  test("GET /reports/yield rejects invalid group_by", async () => {
+    const app = await buildApp();
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/reports/yield?from=2026-01-01&to=2026-12-31&group_by=grade",
+    });
+
+    expect(response.statusCode).toBe(400);
+
+    expect(response.json()).toEqual({
+      message: "group_by must be either crop or zone",
+    });
+
+    await app.close();
+  });
+
+  test("GET /reports/yield rejects invalid date range", async () => {
+    const app = await buildApp();
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/reports/yield?from=2026-12-31&to=2026-01-01&group_by=crop",
+    });
+
+    expect(response.statusCode).toBe(400);
+
+    expect(response.json()).toEqual({
+      message: "from date cannot be after to date",
+    });
 
     await app.close();
   });

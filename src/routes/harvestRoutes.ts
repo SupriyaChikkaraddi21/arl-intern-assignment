@@ -59,11 +59,52 @@ export async function harvestRoutes(app: FastifyInstance) {
       throw error;
     }
   });
+// YIELD REPORT
+app.get("/reports/yield", async (request, reply) => {
+  const query = request.query as {
+    from?: string;
+    to?: string;
+    group_by?: string;
+  };
 
-  // YIELD REPORT
-  app.get("/reports/yield", async (request, reply) => {
-    const report = await getYieldReport();
+  const { from, to, group_by } = query;
 
-    return reply.send(report);
-  });
+  if (!from || !to || !group_by) {
+    return reply.status(400).send({
+      message: "from, to and group_by are required",
+    });
+  }
+
+  if (group_by !== "crop" && group_by !== "zone") {
+    return reply.status(400).send({
+      message: "group_by must be either crop or zone",
+    });
+  }
+
+  const fromDate = new Date(from);
+  const toDate = new Date(to);
+
+  if (
+    Number.isNaN(fromDate.getTime()) ||
+    Number.isNaN(toDate.getTime())
+  ) {
+    return reply.status(400).send({
+      message: "Invalid date format",
+    });
+  }
+
+  if (fromDate > toDate) {
+    return reply.status(400).send({
+      message: "from date cannot be after to date",
+    });
+  }
+
+  const report = await getYieldReport(
+    from,
+    to,
+    group_by
+  );
+
+  return reply.send(report);
+});
 }
