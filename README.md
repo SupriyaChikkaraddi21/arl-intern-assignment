@@ -496,6 +496,57 @@ This project focuses on backend engineering concepts including:
 
 ---
 
+## Assumptions
+
+The following assumptions were made where the assignment specification did not explicitly define the behaviour:
+
+### Batch Lifecycle
+
+- Every newly created batch starts in the `SEEDED` stage.
+- A batch is considered active until it reaches `HARVESTED`.
+- A tray can have only one active batch at a time.
+- Once a batch reaches `HARVESTED`, its tray can be reused for another batch.
+- Batch stages must progress strictly in this order:
+  `SEEDED → GERMINATION → GROWING → HARVEST_READY → HARVESTED`.
+- Stage transitions are limited to exactly one step forward. Skipping stages, moving backward, or repeating the current stage is rejected.
+
+### Validation
+
+- Tray codes are treated as unique identifiers.
+- Tray capacity must be a positive value.
+- Required fields must be present and valid before data is persisted.
+- Harvest weight must be greater than zero.
+- Harvest grade is restricted to the grades defined by the assignment: `A`, `B`, or `C`.
+- Invalid input is treated as a `400 Bad Request`.
+- Requests for resources that do not exist are treated as `404 Not Found`.
+- Requests that violate an existing business rule, such as attempting to create another active batch on an occupied tray, are treated as `409 Conflict`.
+
+### Harvest Handling
+
+- A harvest can only be recorded when the batch is currently in `HARVEST_READY`.
+- Recording a harvest and changing the batch to `HARVESTED` are treated as one atomic database operation.
+- If any part of the harvest transaction fails, the transaction is rolled back.
+- Row-level locking is used during harvest processing so concurrent requests cannot incorrectly harvest the same batch.
+
+### Pagination and Filtering
+
+- Pagination is applied to batch listing when requested.
+- Batch filtering can be combined using the supported stage, crop, and zone parameters.
+- When pagination parameters are omitted, the API uses its configured default behaviour.
+
+### Database and Architecture
+
+- PostgreSQL is the source of truth for persisted application data.
+- Business rules are primarily enforced in the service layer, with database constraints used where appropriate to protect data integrity.
+- Routes are responsible for HTTP-level concerns, while services contain the core business logic and database operations.
+- The API does not implement authentication because authentication is explicitly outside the scope of the assignment.
+
+### Scope
+
+- No frontend, authentication, Docker, CI/CD, or deployment infrastructure is required because these are outside the evaluation scope of the assignment.
+- The implementation prioritizes correctness of the required REST API, database design, business rules, transactions, and automated tests.
+- Part 3 is treated separately from the required Part 1 and Part 2 functionality.
 ## Author
 
 Developed as part of the **AgResearch Labs Software Developer Intern Take-Home Assignment**.
+
