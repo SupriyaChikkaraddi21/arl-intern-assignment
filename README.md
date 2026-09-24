@@ -373,7 +373,7 @@ Run the complete test suite with:
 Example result:
 
     Test Files  3 passed
-    Tests       27 passed
+    Tests       30 passed
 
 ---
 
@@ -392,10 +392,13 @@ The project should compile successfully without TypeScript errors.
 Install dependencies:
 
     npm install
-
 Create your environment file:
 
-    copy .env.example .env
+Windows PowerShell:
+    Copy-Item .env.example .env
+
+macOS / Linux:
+    cp .env.example .env
 
 Configure the PostgreSQL connection values in `.env`.
 
