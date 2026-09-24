@@ -37,6 +37,7 @@ export const updateBatchStage = async (
   const currentIndex = stageOrder.indexOf(batch.stage);
   const newIndex = stageOrder.indexOf(newStage);
 
+  // Only allow exactly one step forward.
   if (newIndex !== currentIndex + 1) {
     throw new Error("INVALID_STAGE_TRANSITION");
   }

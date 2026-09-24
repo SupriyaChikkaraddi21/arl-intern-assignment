@@ -217,4 +217,91 @@ describe("API tests", () => {
 
     await app.close();
   });
+
+  test("POST /batches/:id/harvest rejects invalid batch ID", async () => {
+    const app = await buildApp();
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/batches/abc/harvest",
+      payload: {
+        harvested_on: "2026-09-24",
+        weight_grams: 500,
+        grade: "A",
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+
+    expect(response.json()).toEqual({
+      message: "Invalid batch ID",
+    });
+
+    await app.close();
+  });
+
+  test("POST /batches/:id/harvest rejects missing harvested date", async () => {
+    const app = await buildApp();
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/batches/1/harvest",
+      payload: {
+        weight_grams: 500,
+        grade: "A",
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+
+    expect(response.json()).toEqual({
+      message: "Invalid or missing harvest fields",
+    });
+
+    await app.close();
+  });
+
+  test("POST /batches/:id/harvest rejects missing grade", async () => {
+    const app = await buildApp();
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/batches/1/harvest",
+      payload: {
+        harvested_on: "2026-09-24",
+        weight_grams: 500,
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+
+    expect(response.json()).toEqual({
+      message: "Invalid or missing harvest fields",
+    });
+
+    await app.close();
+  });
+
+  test("GET /reports/yield returns yield report", async () => {
+    const app = await buildApp();
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/reports/yield",
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = response.json();
+
+    expect(Array.isArray(body)).toBe(true);
+
+    if (body.length > 0) {
+      expect(body[0]).toHaveProperty("crop");
+      expect(body[0]).toHaveProperty("grade");
+      expect(body[0]).toHaveProperty("total_weight_grams");
+    }
+
+    await app.close();
+  });
 });
