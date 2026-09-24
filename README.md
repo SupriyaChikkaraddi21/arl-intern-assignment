@@ -67,12 +67,13 @@ Skipping stages, moving backward, or keeping the same stage is rejected.
 - Reject harvesting for missing, invalid, or non-ready batches
 - Use PostgreSQL transactions for harvest operations
 - Use row-level locking to prevent concurrent harvest inconsistencies
-
 ### Yield Reporting
 
-- Generate a crop-wise yield report
-- Group harvested weight by crop and grade
+- Generate yield reports grouped by crop or zone
+- Filter harvested records using a date range
 - Calculate total harvested weight in grams
+- Count the number of harvested batches
+- Calculate average days from seeding to harvest
 - Return structured report data through a REST endpoint
 
 Example:
@@ -600,6 +601,20 @@ GROUP BY <group_column>
 ORDER BY <group_column>;
 
 ```
+
+## What I Would Do With More Time
+
+All required functionality for Parts 1 and 2 was completed, and I implemented Part 3c (Yield Reporting).
+
+I did not attempt Part 3a (Concurrency Safety) or Part 3b (Idempotent Harvest Recording) due to time constraints.
+
+If I continued, I would first implement Part 3b by supporting an `Idempotency-Key` header for harvest requests and storing idempotency keys with a 24-hour validity period, since the stated use case involves retries from unreliable mobile connections. I would also add genuinely concurrent API tests for Part 3a and verify the behaviour when multiple API instances run behind a load balancer.
+
+I would additionally expand integration and edge-case tests around date boundaries, pagination, reporting queries, and database constraints.
+
+## AI Usage
+
+I used ChatGPT during development for debugging assistance, understanding test failures, reviewing implementation approaches, and improving README documentation. I reviewed the suggestions and made sure I understood the implementation and decisions included in the final submission.
 
 ## Author
 
