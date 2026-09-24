@@ -599,6 +599,8 @@ WHERE h.harvested_on BETWEEN $1 AND $2
 GROUP BY <group_column>
 ORDER BY <group_column>;
 
+```
+
 ## Author
 
 Developed as part of the **AgResearch Labs Software Developer Intern Take-Home Assignment**.
