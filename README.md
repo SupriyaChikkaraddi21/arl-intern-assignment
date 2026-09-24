@@ -1,4 +1,4 @@
-# AgResearch Labs API
+﻿# AgResearch Labs API
 
 A backend REST API built for managing agricultural trays, crop batches, growth stages, harvest records, and yield reports.
 
@@ -44,7 +44,6 @@ The project demonstrates a structured backend implementation using **TypeScript,
 
 Batch stages follow a strict sequential workflow:
 
-```text
 SEEDED
    ↓
 GERMINATION
@@ -54,7 +53,6 @@ GROWING
 HARVEST_READY
    ↓
 HARVESTED
-```
 
 Only one-step-forward transitions are allowed.
 
@@ -79,13 +77,11 @@ Skipping stages, moving backward, or keeping the same stage is rejected.
 
 Example:
 
-```text
-crop       grade    total_weight_grams
---------------------------------------
-Bok Choy   A        600
-Kale       A        750
-Lettuce    A        500
-```
+    crop       grade    total_weight_grams
+    --------------------------------------
+    Bok Choy   A        600
+    Kale       A        750
+    Lettuce    A        500
 
 ---
 
@@ -121,101 +117,79 @@ Lettuce    A        500
 
 ### Create Tray
 
-```http
-POST /trays
-Content-Type: application/json
-```
+    POST /trays
+    Content-Type: application/json
 
-```json
-{
-  "code": "T-A-014",
-  "zone": "A",
-  "capacity_units": 100
-}
-```
+    {
+      "code": "T-A-014",
+      "zone": "A",
+      "capacity_units": 100
+    }
 
 ### Create Batch
 
-```http
-POST /batches
-Content-Type: application/json
-```
+    POST /batches
+    Content-Type: application/json
 
-```json
-{
-  "tray_id": 1,
-  "crop": "Lettuce",
-  "seeded_on": "2026-09-23",
-  "stage": "SEEDED",
-  "expected_harvest_on": "2026-10-15"
-}
-```
+    {
+      "tray_id": 1,
+      "crop": "Lettuce",
+      "seeded_on": "2026-09-23",
+      "stage": "SEEDED",
+      "expected_harvest_on": "2026-10-15"
+    }
 
 ### Update Batch Stage
 
-```http
-PATCH /batches/1/stage
-Content-Type: application/json
-```
+    PATCH /batches/1/stage
+    Content-Type: application/json
 
-```json
-{
-  "stage": "GERMINATION"
-}
-```
+    {
+      "stage": "GERMINATION"
+    }
 
 The API validates that the requested stage is the next valid stage in the lifecycle.
 
 ### Record Harvest
 
-```http
-POST /batches/1/harvest
-Content-Type: application/json
-```
+    POST /batches/1/harvest
+    Content-Type: application/json
 
-```json
-{
-  "harvested_on": "2026-10-15",
-  "weight_grams": 500,
-  "grade": "A"
-}
-```
+    {
+      "harvested_on": "2026-10-15",
+      "weight_grams": 500,
+      "grade": "A"
+    }
 
 A harvest is accepted only when the batch is currently in the `HARVEST_READY` stage.
 
 After successful harvest creation, the batch is automatically moved to:
 
-```text
-HARVESTED
-```
+`HARVESTED`
 
 ### Yield Report
 
-```http
-GET /reports/yield
-```
+    GET /reports/yield
 
 Example response:
 
-```json
-[
-  {
-    "crop": "Bok Choy",
-    "grade": "A",
-    "total_weight_grams": 600
-  },
-  {
-    "crop": "Kale",
-    "grade": "A",
-    "total_weight_grams": 750
-  },
-  {
-    "crop": "Lettuce",
-    "grade": "A",
-    "total_weight_grams": 500
-  }
-]
-```
+    [
+      {
+        "crop": "Bok Choy",
+        "grade": "A",
+        "total_weight_grams": 600
+      },
+      {
+        "crop": "Kale",
+        "grade": "A",
+        "total_weight_grams": 750
+      },
+      {
+        "crop": "Lettuce",
+        "grade": "A",
+        "total_weight_grams": 500
+      }
+    ]
 
 ---
 
@@ -225,13 +199,11 @@ The application uses PostgreSQL for persistent storage.
 
 Main entities include:
 
-```text
-TRAYS
-  │
-  └── BATCHES
-        │
-        └── HARVESTS
-```
+    TRAYS
+      │
+      └── BATCHES
+            │
+            └── HARVESTS
 
 ### Trays
 
@@ -273,27 +245,23 @@ Harvest creation uses a PostgreSQL transaction.
 
 The workflow is:
 
-```text
-BEGIN
-  ↓
-Lock batch row
-  ↓
-Verify batch exists
-  ↓
-Verify HARVEST_READY
-  ↓
-Insert harvest
-  ↓
-Update batch → HARVESTED
-  ↓
-COMMIT
-```
+    BEGIN
+      ↓
+    Lock batch row
+      ↓
+    Verify batch exists
+      ↓
+    Verify HARVEST_READY
+      ↓
+    Insert harvest
+      ↓
+    Update batch → HARVESTED
+      ↓
+    COMMIT
 
 If any operation fails:
 
-```text
-ROLLBACK
-```
+    ROLLBACK
 
 This ensures that a harvest record is not created while the corresponding batch remains in an inconsistent state.
 
@@ -305,17 +273,15 @@ Row-level locking is used when checking the batch before creating the harvest, h
 
 The project follows a layered backend structure:
 
-```text
-HTTP Request
-     ↓
-Routes
-     ↓
-Services
-     ↓
-PostgreSQL
-     ↓
-HTTP Response
-```
+    HTTP Request
+         ↓
+       Routes
+         ↓
+      Services
+         ↓
+     PostgreSQL
+         ↓
+    HTTP Response
 
 ### Routes
 
@@ -350,40 +316,38 @@ PostgreSQL provides:
 
 ## Project Structure
 
-```text
-arl-intern-assignment/
-│
-├── src/
-│   ├── db.ts
-│   ├── server.ts
-│   │
-│   ├── routes/
-│   │   ├── batchRoutes.ts
-│   │   ├── harvestRoutes.ts
-│   │   └── trayRoutes.ts
-│   │
-│   ├── services/
-│   │   ├── harvestService.ts
-│   │   ├── pgBatchService.ts
-│   │   ├── pgTrayService.ts
-│   │   └── stageService.ts
-│   │
-│   └── types/
-│       └── index.ts
-│
-├── tests/
-│   ├── api.test.ts
-│   ├── harvestService.test.ts
-│   └── stageService.test.ts
-│
-├── schema.sql
-├── .env.example
-├── .gitignore
-├── package.json
-├── package-lock.json
-├── README.md
-└── tsconfig.json
-```
+    arl-intern-assignment/
+    │
+    ├── src/
+    │   ├── db.ts
+    │   ├── server.ts
+    │   │
+    │   ├── routes/
+    │   │   ├── batchRoutes.ts
+    │   │   ├── harvestRoutes.ts
+    │   │   └── trayRoutes.ts
+    │   │
+    │   ├── services/
+    │   │   ├── harvestService.ts
+    │   │   ├── pgBatchService.ts
+    │   │   ├── pgTrayService.ts
+    │   │   └── stageService.ts
+    │   │
+    │   └── types/
+    │       └── index.ts
+    │
+    ├── tests/
+    │   ├── api.test.ts
+    │   ├── harvestService.test.ts
+    │   └── stageService.test.ts
+    │
+    ├── schema.sql
+    ├── .env.example
+    ├── .gitignore
+    ├── package.json
+    ├── package-lock.json
+    ├── README.md
+    └── tsconfig.json
 
 ---
 
@@ -403,16 +367,12 @@ Test coverage includes:
 
 Run the complete test suite with:
 
-```bash
-npm test
-```
+    npm test
 
 Example result:
 
-```text
-Test Files  3 passed
-Tests       27 passed
-```
+    Test Files  3 passed
+    Tests       27 passed
 
 ---
 
@@ -420,9 +380,7 @@ Tests       27 passed
 
 Compile the TypeScript project using:
 
-```bash
-npm run build
-```
+    npm run build
 
 The project should compile successfully without TypeScript errors.
 
@@ -432,43 +390,31 @@ The project should compile successfully without TypeScript errors.
 
 Install dependencies:
 
-```bash
-npm install
-```
+    npm install
 
 Create your environment file:
 
-```powershell
-copy .env.example .env
-```
+    copy .env.example .env
 
 Configure the PostgreSQL connection values in `.env`.
 
 Start the development server:
 
-```bash
-npm run dev
-```
+    npm run dev
 
 The API runs on:
 
-```text
-http://localhost:3000
-```
+    http://localhost:3000
 
 ### Health Check
 
-```http
-GET /
-```
+    GET /
 
 Example response:
 
-```json
-{
-  "message": "AgResearch Labs API is running"
-}
-```
+    {
+      "message": "AgResearch Labs API is running"
+    }
 
 ---
 
@@ -478,10 +424,8 @@ The application uses environment variables for database configuration.
 
 Example:
 
-```env
-DATABASE_URL=postgresql://username:password@localhost:5432/agresearch
-PORT=3000
-```
+    DATABASE_URL=postgresql://username:password@localhost:5432/agresearch
+    PORT=3000
 
 Do not commit the actual `.env` file or database credentials to Git.
 
@@ -491,25 +435,23 @@ Do not commit the actual `.env` file or database credentials to Git.
 
 A typical crop lifecycle is:
 
-```text
-1. Create a tray
-        ↓
-2. Create a crop batch
-        ↓
-3. SEEDED
-        ↓
-4. GERMINATION
-        ↓
-5. GROWING
-        ↓
-6. HARVEST_READY
-        ↓
-7. Record harvest
-        ↓
-8. HARVESTED
-        ↓
-9. Generate yield report
-```
+    1. Create a tray
+            ↓
+    2. Create a crop batch
+            ↓
+    3. SEEDED
+            ↓
+    4. GERMINATION
+            ↓
+    5. GROWING
+            ↓
+    6. HARVEST_READY
+            ↓
+    7. Record harvest
+            ↓
+    8. HARVESTED
+            ↓
+    9. Generate yield report
 
 The backend prevents invalid lifecycle operations through service-level validation.
 
@@ -518,8 +460,6 @@ The backend prevents invalid lifecycle operations through service-level validati
 ## Error Handling
 
 The API returns appropriate HTTP status codes for common failures.
-
-Examples include:
 
 ### 400 Bad Request
 
